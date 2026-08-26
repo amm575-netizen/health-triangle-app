@@ -1,0 +1,47 @@
+name: Build & publish Docker image
+
+# Builds the container image and pushes it to Docker Hub (docker.com)
+# every time you push to the main branch, and whenever you tag a release
+# like v1.0.0.
+#
+# BEFORE THIS WORKS, add two repository secrets in GitHub:
+#   Settings > Secrets and variables > Actions > New repository secret
+#     DOCKERHUB_USERNAME  = your Docker Hub username
+#     DOCKERHUB_TOKEN     = a Docker Hub access token
+#                           (Docker Hub > Account settings > Personal access tokens)
+
+on:
+  push:
+    branches: [ main ]
+    tags: [ 'v*' ]
+  workflow_dispatch:   # lets you run it manually from the Actions tab
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the code
+        uses: actions/checkout@v4
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Work out image tags
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ secrets.DOCKERHUB_USERNAME }}/health-triangle-app
+          tags: |
+            type=raw,value=latest
+            type=ref,event=tag
+
+      - name: Build and push
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}

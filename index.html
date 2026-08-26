@@ -1,0 +1,1049 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>My Health Triangle — SMART Goal Builder</title>
+<link rel="icon" href="data:,">
+<meta name="color-scheme" content="light dark">
+<style>
+  :root{
+    color-scheme: light;
+    --plane:#f9f9f7; --surface:#ffffff; --surface-2:#fcfcfb;
+    --ink:#0b0b0b; --ink-2:#52514e; --muted:#898781;
+    --line:#e1e0d9; --ring:rgba(11,11,11,0.10);
+    --physical:#2a78d6; --mental:#1baf7a; --social:#eb6834;
+    --good:#0ca30c; --good-text:#006300; --warn:#eda100;
+    --accent:#4a3aa7;
+    --r:14px; --shadow:0 1px 2px rgba(11,11,11,.05),0 6px 20px rgba(11,11,11,.06);
+  }
+  @media (prefers-color-scheme: dark){
+    :root:where(:not([data-theme="light"])){
+      color-scheme: dark;
+      --plane:#0d0d0d; --surface:#1a1a19; --surface-2:#1f1f1e;
+      --ink:#ffffff; --ink-2:#c3c2b7; --muted:#898781;
+      --line:#2c2c2a; --ring:rgba(255,255,255,0.10);
+      --physical:#3987e5; --mental:#199e70; --social:#d95926;
+      --good:#0ca30c; --good-text:#0ca30c; --warn:#c98500; --accent:#9085e9;
+    }
+  }
+  :root[data-theme="dark"]{
+    color-scheme: dark;
+    --plane:#0d0d0d; --surface:#1a1a19; --surface-2:#1f1f1e;
+    --ink:#ffffff; --ink-2:#c3c2b7; --muted:#898781;
+    --line:#2c2c2a; --ring:rgba(255,255,255,0.10);
+    --physical:#3987e5; --mental:#199e70; --social:#d95926;
+    --good:#0ca30c; --good-text:#0ca30c; --warn:#c98500; --accent:#9085e9;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    background:var(--plane); color:var(--ink);
+    font-family:system-ui,-apple-system,"Segoe UI",sans-serif;
+    line-height:1.55; -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:860px;margin:0 auto;padding:20px 18px 90px}
+  header.top{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin:6px 0 4px}
+  h1{font-size:1.5rem;margin:0;letter-spacing:-.01em}
+  .sub{color:var(--ink-2);margin:2px 0 14px;font-size:.98rem}
+  .privacy{
+    display:inline-flex;gap:8px;align-items:center;background:var(--surface);
+    border:1px solid var(--ring);border-radius:999px;padding:7px 13px;
+    font-size:.85rem;color:var(--ink-2);box-shadow:var(--shadow)
+  }
+  .card{background:var(--surface);border:1px solid var(--ring);border-radius:var(--r);
+    padding:20px 22px;box-shadow:var(--shadow);margin:16px 0}
+  .card h2{margin:.1em 0 .5em;font-size:1.2rem}
+  .card h3{margin:1.2em 0 .3em;font-size:1.02rem}
+  p{margin:.55em 0}
+  .lede{font-size:1.03rem}
+  .tri-legend{display:flex;flex-wrap:wrap;gap:14px;margin:14px 0}
+  .tri-legend .item{display:flex;gap:9px;align-items:flex-start;flex:1;min-width:210px}
+  .dot{width:14px;height:14px;border-radius:4px;margin-top:4px;flex:none}
+  .btn{appearance:none;border:0;cursor:pointer;font:inherit;font-weight:600;
+    border-radius:10px;padding:12px 20px;background:var(--accent);color:#fff;
+    box-shadow:var(--shadow);transition:transform .06s ease,filter .15s ease}
+  .btn:hover{filter:brightness(1.07)} .btn:active{transform:translateY(1px)}
+  .btn.secondary{background:var(--surface);color:var(--ink);border:1px solid var(--ring)}
+  .btn.small{padding:8px 14px;font-size:.9rem}
+  .btn:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible,
+  label:focus-within{outline:3px solid var(--accent);outline-offset:2px}
+  .btnrow{display:flex;flex-wrap:wrap;gap:10px;margin-top:16px}
+  .hidden{display:none !important}
+  /* progress */
+  .prog-wrap{position:sticky;top:0;z-index:5;background:var(--plane);
+    padding:10px 0 8px;margin-bottom:4px;border-bottom:1px solid var(--line)}
+  .prog-track{height:8px;background:var(--line);border-radius:99px;overflow:hidden}
+  .prog-bar{height:100%;width:0;background:var(--accent);border-radius:99px;transition:width .3s}
+  .prog-label{font-size:.82rem;color:var(--ink-2);margin-top:6px}
+  /* questionnaire */
+  .side-head{display:flex;align-items:center;gap:10px;margin:26px 0 4px}
+  .side-head .bar{width:6px;height:26px;border-radius:3px}
+  .side-head h2{margin:0;font-size:1.15rem}
+  .side-head .tag{font-size:.8rem;color:var(--muted)}
+  .q{background:var(--surface);border:1px solid var(--ring);border-radius:12px;
+    padding:15px 16px;margin:11px 0;box-shadow:var(--shadow)}
+  .q .mod{font-size:.72rem;letter-spacing:.03em;text-transform:uppercase;color:var(--muted);font-weight:600}
+  .q .stmt{font-weight:600;margin:3px 0 11px}
+  .q .stmt:not(:first-of-type){margin-top:4px}
+  hr.qdiv{border:0;border-top:1px dashed var(--line);margin:16px 0 13px}
+  .opts{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+  @media(max-width:620px){.opts{grid-template-columns:repeat(2,1fr)}}
+  .opt{position:relative}
+  .opt input{position:absolute;opacity:0;inset:0;cursor:pointer;margin:0}
+  .opt span{display:flex;align-items:center;justify-content:center;text-align:center;
+    min-height:52px;padding:8px 6px;border:1.5px solid var(--line);border-radius:10px;
+    font-size:.86rem;color:var(--ink-2);background:var(--surface-2);transition:all .12s}
+  .opt input:checked+span{border-color:var(--accent);background:color-mix(in srgb,var(--accent) 12%,var(--surface));
+    color:var(--ink);font-weight:600;box-shadow:inset 0 0 0 1px var(--accent)}
+  .opt.skip span{font-size:.8rem}
+  .skiprow{margin-top:9px}
+  .skiprow label{display:inline-flex;gap:7px;align-items:center;font-size:.85rem;color:var(--muted);cursor:pointer}
+  /* results triangle */
+  .tri-box{display:flex;flex-wrap:wrap;gap:24px;align-items:center;justify-content:center}
+  .meters{flex:1;min-width:260px}
+  .meter{margin:14px 0}
+  .meter .top{display:flex;justify-content:space-between;align-items:baseline;font-size:.92rem}
+  .meter .top b{font-size:.98rem}
+  .meter .val{font-variant-numeric:tabular-nums;color:var(--ink-2)}
+  .track{height:12px;background:var(--line);border-radius:99px;overflow:hidden;margin-top:5px}
+  .fill{height:100%;border-radius:99px;width:0;transition:width .8s cubic-bezier(.2,.7,.2,1)}
+  .chips{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0 2px}
+  .chip{font-size:.82rem;padding:5px 11px;border-radius:99px;border:1px solid var(--ring);
+    background:var(--surface-2);display:inline-flex;gap:6px;align-items:center}
+  .chip.strong{border-color:color-mix(in srgb,var(--good) 45%,var(--ring))}
+  .grow-item{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;
+    border:1px solid var(--ring);border-radius:11px;padding:12px 14px;margin:9px 0;background:var(--surface-2)}
+  .grow-item .lbl{font-weight:600}
+  .grow-item .side-tag{font-size:.76rem;color:var(--muted);display:block;font-weight:400}
+  /* SMART builder */
+  .field{margin:15px 0}
+  .field label{display:block;font-weight:600;margin-bottom:4px}
+  .field .hint{font-weight:400;color:var(--muted);font-size:.84rem;margin:0 0 6px}
+  input[type=text],textarea,select{width:100%;font:inherit;color:var(--ink);
+    background:var(--surface-2);border:1.5px solid var(--line);border-radius:10px;padding:10px 12px}
+  textarea{min-height:64px;resize:vertical}
+  .starters{display:flex;flex-direction:column;gap:8px;margin:8px 0}
+  .starter{text-align:left;border:1.5px dashed var(--line);border-radius:10px;padding:10px 12px;
+    background:var(--surface-2);cursor:pointer;font:inherit;color:var(--ink);transition:all .12s}
+  .starter:hover{border-color:var(--accent);border-style:solid}
+  .smart-badge{display:inline-block;font-size:.72rem;font-weight:700;letter-spacing:.04em;
+    color:#fff;background:var(--accent);border-radius:6px;padding:2px 7px;margin-right:7px}
+  /* plan output */
+  .goalcard{border:1px solid var(--ring);border-left:5px solid var(--accent);border-radius:11px;
+    padding:15px 17px;margin:13px 0;background:var(--surface)}
+  .goalcard .sideflag{font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.03em}
+  .goalcard .statement{font-size:1.05rem;font-weight:600;margin:6px 0 10px}
+  .goalcard dl{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;margin:0;font-size:.92rem}
+  .goalcard dt{color:var(--muted);font-weight:600}
+  .goalcard dd{margin:0}
+  .note{background:color-mix(in srgb,var(--warn) 12%,var(--surface));border:1px solid color-mix(in srgb,var(--warn) 40%,var(--ring));
+    border-radius:11px;padding:13px 16px;font-size:.92rem}
+  .help{font-size:.86rem;color:var(--ink-2)}
+  .help b{color:var(--ink)}
+  /* module check-in + completion slip */
+  select{max-width:100%}
+  .ck{display:flex;gap:9px;align-items:flex-start;margin:9px 0;font-size:.95rem;cursor:pointer}
+  .ck input{margin-top:3px;width:17px;height:17px;flex:none}
+  .slip{border:2px solid var(--ink);border-radius:12px;padding:18px 20px;margin-top:16px;background:var(--surface)}
+  .slip-h{font-size:.76rem;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);font-weight:700}
+  .slip-title{font-size:1.2rem;font-weight:800;margin:2px 0 12px}
+  .slip-t{border-collapse:collapse;margin:6px 0}
+  .slip-t td{padding:3px 14px 3px 0;font-size:.95rem;vertical-align:top}
+  .slip-t td:first-child{color:var(--muted);font-weight:600;white-space:nowrap}
+  .slip-checks{margin:12px 0;font-size:.96rem;line-height:1.8}
+  .slip-counts{font-size:.95rem;margin:6px 0}
+  .slip-code{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.9rem;background:var(--surface-2);
+    border:1px solid var(--ring);border-radius:7px;padding:6px 10px;display:inline-block;margin:8px 0}
+  .slip-note{font-size:.8rem;color:var(--muted);margin:10px 0 0;font-style:italic}
+  .slip-sign{margin-top:16px;font-size:.95rem}
+  @media print{
+    body.slip-only .wrap>*{display:none !important}
+    body.slip-only #plan{display:block !important}
+    body.slip-only #plan>*{display:none !important}
+    body.slip-only #checkpointCard{display:block !important;box-shadow:none;border:0;padding:0}
+    body.slip-only #checkpointCard>*{display:none !important}
+    body.slip-only #slipCard{display:block !important}
+    body.slip-only #slipCard .no-print{display:none !important}
+    body.slip-only .slip{border:2px solid #000}
+  }
+  /* progress log on goals */
+  .log{margin:10px 0 2px;border-top:1px dashed var(--line);padding-top:9px}
+  .log-h{font-size:.78rem;font-weight:700;text-transform:uppercase;letter-spacing:.03em;color:var(--muted);margin-bottom:5px}
+  .log-item{font-size:.9rem;margin:5px 0;padding-left:12px;border-left:2px solid var(--line)}
+  .log-item .d{font-weight:600;color:var(--ink-2)}
+  .log-item .m{font-size:.74rem;color:var(--muted)}
+  .meta-line{font-size:.78rem;color:var(--muted);margin-top:2px}
+  footer{margin-top:30px;color:var(--muted);font-size:.8rem;text-align:center}
+  .toggle{margin-left:auto}
+  .toggle button{background:var(--surface);border:1px solid var(--ring);border-radius:8px;
+    padding:6px 10px;cursor:pointer;color:var(--ink-2);font:inherit;font-size:.82rem}
+  @media print{
+    .prog-wrap,.btnrow,.no-print,header.top .toggle,.privacy{display:none !important}
+    body{background:#fff} .card{box-shadow:none;border-color:#ccc;break-inside:avoid}
+    .goalcard{break-inside:avoid}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <h1>My Health Triangle</h1>
+    <span class="privacy">🔒 Private — saved only on this laptop, never sent anywhere</span>
+    <div class="toggle no-print"><button id="themeBtn" type="button" aria-label="Toggle dark mode">◐ Theme</button></div>
+  </header>
+  <p class="sub">A goal-setting companion for Health 1320. Check in honestly, then build a SMART goal to grow.</p>
+
+  <!-- ============ INTRO ============ -->
+  <section id="intro" class="card" aria-labelledby="introH">
+    <div id="resumeBox" class="note hidden" style="margin:0 0 16px">
+      <b>Welcome back!</b> Your saved progress is right here on this laptop.
+      <div class="btnrow" style="margin-top:10px">
+        <button class="btn small" type="button" onclick="resumeToPlan()">My goals &amp; progress →</button>
+        <button class="btn small secondary" type="button" onclick="resumeToResults()">See my triangle</button>
+      </div>
+    </div>
+    <h2 id="introH">Your health has three sides</h2>
+    <p class="lede">The <b>Health Triangle</b> is made of three sides that support each other. When one side gets stronger — or weaker — the others feel it too. There's no "perfect" triangle, and balance doesn't mean equal thirds. It means giving attention to the side that needs it right now.</p>
+    <div class="tri-legend">
+      <div class="item"><span class="dot" style="background:var(--physical)"></span><div><b>Physical</b><br><span class="help">Movement, food, sleep, safety, taking care of your body.</span></div></div>
+      <div class="item"><span class="dot" style="background:var(--mental)"></span><div><b>Mental &amp; Emotional</b><br><span class="help">Handling stress and feelings, self-talk, coping, asking for help.</span></div></div>
+      <div class="item"><span class="dot" style="background:var(--social)"></span><div><b>Social</b><br><span class="help">Communication, boundaries, friendships, life online, support.</span></div></div>
+    </div>
+    <div class="note" style="margin-top:6px">
+      <b>How this works &amp; your privacy.</b> You'll answer an honest self-check — 36 quick questions, twelve for each side of your triangle, so you get an accurate picture. There are no right answers and nothing is graded. Your work saves automatically <em>on this laptop</em> so you can come back all term and see how your goals are going — but it is never sent to a server or to anyone, including your teacher. You can skip any question, and you choose whether to save, print, or share anything.
+    </div>
+    <div class="btnrow">
+      <button class="btn" type="button" onclick="startCheck()">Start my check-in →</button>
+    </div>
+  </section>
+
+  <!-- ============ QUESTIONNAIRE ============ -->
+  <section id="quiz" class="hidden" aria-labelledby="quizH">
+    <div class="prog-wrap">
+      <div class="prog-track"><div class="prog-bar" id="progBar"></div></div>
+      <div class="prog-label"><span id="progText">0 of 36 answered</span> · Rate how true each is for you <b>lately</b>. Be honest — this is just for you.</div>
+    </div>
+    <h2 id="quizH" class="hidden">Self check-in</h2>
+    <div id="quizForm"></div>
+    <div class="btnrow">
+      <button class="btn" type="button" onclick="showResults()">See my Health Triangle →</button>
+      <button class="btn secondary" type="button" onclick="goto('intro')">← Back</button>
+    </div>
+  </section>
+
+  <!-- ============ RESULTS ============ -->
+  <section id="results" class="hidden" aria-labelledby="resH">
+    <div class="card">
+      <h2 id="resH">Your Health Triangle right now</h2>
+      <p>This is a snapshot, not a score. The <b>longer a side of your triangle</b>, the more habits on that side you're already doing well — so a balanced life makes an even triangle, and a shorter side shows where a goal could help most. The bars below give the exact numbers.</p>
+      <div class="tri-box">
+        <svg id="triSvg" width="270" height="238" viewBox="0 0 270 238" role="img" aria-label="Triangle diagram of your three health sides"></svg>
+        <div class="meters" id="meters"></div>
+      </div>
+    </div>
+    <div class="card">
+      <h2>💪 Where you're already strong</h2>
+      <p class="help">Strengths are worth protecting. Notice what's working.</p>
+      <div id="strengths" class="chips"></div>
+    </div>
+    <div class="card">
+      <h2>🌱 Where a goal could help you grow</h2>
+      <p>Pick one to turn into a SMART goal. A balanced triangle comes from feeding the side that needs it — try choosing at least one from a shorter bar.</p>
+      <div id="growAreas"></div>
+      <div class="btnrow">
+        <button class="btn secondary small" type="button" onclick="openBuilder(null)">+ Build a goal for any area</button>
+      </div>
+    </div>
+    <div class="card">
+      <div class="btnrow">
+        <button class="btn" type="button" onclick="goto('plan');renderPlan()">Go to my goal plan →</button>
+        <button class="btn secondary" type="button" onclick="goto('quiz')">← Edit my answers</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ GOAL BUILDER ============ -->
+  <section id="builder" class="hidden card" aria-labelledby="bH">
+    <h2 id="bH">Build a SMART goal</h2>
+    <p class="help" id="bContext"></p>
+
+    <h3>Need an idea? Tap a starter (from your Health I lessons):</h3>
+    <div class="starters" id="starters"></div>
+
+    <div class="field">
+      <label for="fSpecific"><span class="smart-badge">S</span>Specific — what exactly will you do?</label>
+      <p class="hint">Name the action clearly. Not "be healthier" but "walk after dinner."</p>
+      <textarea id="fSpecific" placeholder="e.g., I will take a 15-minute walk after dinner."></textarea>
+    </div>
+    <div class="field">
+      <label for="fMeasure"><span class="smart-badge">M</span>Measurable — <em>how often</em> and <em>how many times</em>?</label>
+      <p class="hint">Be specific with a number and a frequency: how many times per day or per week? "Sometimes" and "more" can't be measured — "4 times a week" can.</p>
+      <input type="text" id="fMeasure" placeholder="e.g., 4 times a week (Monday–Thursday)">
+    </div>
+    <div class="field">
+      <label for="fAchieve"><span class="smart-badge">A</span>Achievable — what's your first small step?</label>
+      <p class="hint">Pick a start you're confident you can actually do this week.</p>
+      <input type="text" id="fAchieve" placeholder="e.g., lay out my shoes by the door tonight">
+    </div>
+    <div class="field">
+      <label for="fRelevant"><span class="smart-badge">R</span>Relevant — why does this matter to you?</label>
+      <p class="hint">Your real reason keeps you going when it's hard.</p>
+      <input type="text" id="fRelevant" placeholder="e.g., I have more energy and sleep better when I move.">
+    </div>
+    <div class="field">
+      <label for="fTime"><span class="smart-badge">T</span>Time-bound — <em>exactly when</em>, and <em>until when</em>?</label>
+      <p class="hint">Be specific: name the day or time of day you'll do it, and the date you'll check your progress. "Right after dinner, starting Monday" beats "later."</p>
+      <input type="text" id="fTime" placeholder="e.g., right after dinner, starting this Monday, for 2 weeks">
+    </div>
+    <div class="field">
+      <label for="fObstacle">One obstacle that could get in the way — and your plan for it</label>
+      <p class="hint">From Lesson 1.4: naming the obstacle now makes it easier to handle later.</p>
+      <textarea id="fObstacle" placeholder="e.g., If it's raining, I'll do a 15-minute workout video inside instead."></textarea>
+    </div>
+    <div class="field">
+      <label for="fNote">Add a progress note <span style="font-weight:400;color:var(--muted)">(optional — dated &amp; kept in this goal's log)</span></label>
+      <p class="hint">Each time you check in, jot how the goal is going. It's stamped with today's date and added to this goal's Progress log, so you can look back later and see how you improved. Stays on your laptop.</p>
+      <textarea id="fNote" placeholder="e.g., Hitting 3 of 4 nights — bumping it to 5 now that it's becoming a habit."></textarea>
+    </div>
+    <p id="specTip" class="hint hidden" style="color:var(--warn);font-weight:600"></p>
+    <div class="btnrow">
+      <button class="btn" type="button" id="saveBtn" onclick="saveGoal()">Save this goal</button>
+      <button class="btn secondary" type="button" onclick="cancelBuilder()">Cancel</button>
+    </div>
+  </section>
+
+  <!-- ============ PLAN ============ -->
+  <section id="plan" class="hidden" aria-labelledby="pH">
+    <div class="card">
+      <h2 id="pH">My SMART goal plan</h2>
+      <p class="help" id="planEmpty">You haven't saved any goals yet. Go back and build one!</p>
+      <div id="goalList"></div>
+      <div class="btnrow no-print">
+        <button class="btn secondary small" type="button" onclick="goto('results')">← Add another goal</button>
+      </div>
+    </div>
+    <div class="card no-print">
+      <h2>📅 Module check-in</h2>
+      <p>Each time we start a new module, come back here — review your goals and adjust or add one that connects to what we're learning right now.</p>
+      <div class="field" style="max-width:440px">
+        <label for="modSelect">Which module are we on?</label>
+        <select id="modSelect" onchange="onModuleChange()">
+          <option value="">— choose the current module —</option>
+        </select>
+      </div>
+      <div id="modAreas"></div>
+    </div>
+    <div class="card" id="checkpointCard">
+      <h2>✅ Completion checkpoint</h2>
+      <p>This is your proof that you did the activity — turn it in for credit. It shows the date and that you finished; it does <b>not</b> include your answers or your goals, so your check-in stays private to you.</p>
+      <div style="display:flex;flex-wrap:wrap;gap:14px">
+        <div class="field" style="flex:1;min-width:190px;margin-top:4px"><label for="ckName">Your name</label><input type="text" id="ckName" placeholder="First and last name" oninput="state.ckName=this.value;saveState()"></div>
+        <div class="field" style="flex:1;min-width:160px;margin-top:4px"><label for="ckClass">Class / period</label><input type="text" id="ckClass" placeholder="e.g., Period 3" oninput="state.ckClass=this.value;saveState()"></div>
+      </div>
+      <label class="ck"><input type="checkbox" id="ck1"> I completed my Health Triangle check-in.</label>
+      <label class="ck"><input type="checkbox" id="ck2"> I reviewed my goals and adjusted or added a goal for this module.</label>
+      <div class="btnrow no-print"><button class="btn" type="button" onclick="makeCheckpoint()">Create my completion slip →</button></div>
+      <div id="slipCard"></div>
+    </div>
+    <div class="card no-print">
+      <h2>Keep your plan</h2>
+      <p>Your progress <b>saves automatically on this laptop</b>, so you can close this and come back all term. To keep a copy or hand something in, use the buttons below — it's yours, and you decide whether to share it.</p>
+      <div class="btnrow">
+        <button class="btn" type="button" onclick="downloadPlan()">💾 Save my plan as a file</button>
+        <button class="btn secondary" type="button" onclick="window.print()">🖨️ Print / Save as PDF</button>
+      </div>
+      <div class="btnrow" style="margin-top:4px">
+        <button class="btn secondary small" type="button" onclick="backupProgress()">⬇️ Back up my progress</button>
+        <input type="file" id="restoreFile" accept="application/json,.json" class="hidden" onchange="restoreProgress(event)">
+        <button class="btn secondary small" type="button" onclick="document.getElementById('restoreFile').click()">⬆️ Restore from a backup</button>
+        <button class="btn secondary small" type="button" onclick="clearAll()">Start over</button>
+      </div>
+      <div class="note" style="margin-top:16px">
+        <b>Bring it back to class.</b> In Lesson 1.4 you write a SMART goal; a couple of weeks later (Lesson 1.10) you'll look at how it went and revise it. Each module, come back to add a progress note to a goal — that's exactly how real goal-setting works. Tip: if your laptop ever gets wiped, use <b>Back up my progress</b> now and then so you never lose your history.
+      </div>
+    </div>
+    <div class="card help">
+      <h2 style="font-size:1.05rem">If you ever need to talk to someone</h2>
+      <p>Everyone's mental and emotional health matters. If you're struggling, reaching out is a strength, not a weakness.</p>
+      <p><b>988</b> — Suicide &amp; Crisis Lifeline (call or text, 24/7)<br>
+      <b>SafeUT</b> — free app to chat with a licensed counselor (Utah)<br>
+      <b>National Alliance for Eating Disorders</b> — 1-866-662-1235<br>
+      And a trusted adult — a parent, teacher, counselor, or coach — is always a good first call.</p>
+    </div>
+  </section>
+
+  <footer>
+    Built as a companion to Health 1320 (Health Education I) · Organized around the Health Triangle ·
+    Everything you enter stays in your browser and is never collected.
+  </footer>
+</div>
+
+<script>
+/* ---------------- CONTENT: areas mapped to Health I modules ---------------- */
+const SIDES = {
+  physical:{name:"Physical", color:"var(--physical)"},
+  mental:{name:"Mental & Emotional", color:"var(--mental)"},
+  social:{name:"Social", color:"var(--social)"}
+};
+
+const AREAS = [
+  /* ---- PHYSICAL ---- */
+  {id:"move", side:"physical", mod:"Module 5", name:"Movement & activity",
+   stmts:[
+     "I move my body in ways I enjoy most days.",
+     "I fit some activity into my day even when I'm busy or the weather is bad."],
+   starters:[
+     "I will get at least 60 minutes of movement I enjoy",
+     "I will take a 10-minute walk or stretch break on school days",
+     "I will try one new physical activity"]},
+  {id:"fuel", side:"physical", mod:"Module 5", name:"Nutrition & fueling",
+   stmts:[
+     "I fuel my body with a mix of foods, including fruits and vegetables.",
+     "I can read a Nutrition Facts label and notice what one serving really is."],
+   starters:[
+     "I will eat a fruit or vegetable with my meals",
+     "I will read the Nutrition Facts label before choosing a snack",
+     "I will drink water instead of a sugary drink"]},
+  {id:"sleep", side:"physical", mod:"Modules 2 & 6", name:"Sleep & rest",
+   stmts:[
+     "I get enough sleep to feel rested for school.",
+     "I keep screens out of the last part of my night so they don't wreck my sleep."],
+   starters:[
+     "I will put my screen away 30 minutes before bed",
+     "I will go to bed early enough to get 8–10 hours of sleep",
+     "I will keep the same wake-up time on school days"]},
+  {id:"body", side:"physical", mod:"Module 5", name:"Body image",
+   stmts:[
+     "I treat my body with respect and don't compare it harshly to others.",
+     "I can tell when media or filters are showing an edited 'ideal' instead of real life."],
+   starters:[
+     "I will mute or unfollow accounts that make me compare myself",
+     "I will write down one thing my body lets me DO (not how it looks)",
+     "I will notice a comparison thought and reframe it accurately"]},
+  {id:"safety", side:"physical", mod:"Module 4", name:"Safety & awareness",
+   stmts:[
+     "I make safe choices and stay aware of my surroundings.",
+     "I'd know the basics of what to do in an emergency (check, call, care)."],
+   starters:[
+     "I will buckle up every ride and put my phone away when crossing streets",
+     "I will wear the right safety gear when I ride or play",
+     "I will notice the exits and hazards when I enter a new place"]},
+  {id:"prevent", side:"physical", mod:"Module 4", name:"Everyday prevention",
+   stmts:[
+     "I keep up habits that prevent illness (handwashing, sunscreen, water).",
+     "I understand that the choices I make now affect my long-term health."],
+   starters:[
+     "I will wash my hands for 20 seconds before eating",
+     "I will keep up one prevention habit like sunscreen or drinking water",
+     "I will build one new healthy routine to protect my long-term health"]},
+
+  /* ---- MENTAL & EMOTIONAL ---- */
+  {id:"stress", side:"mental", mod:"Module 2", name:"Managing stress",
+   stmts:[
+     "I have healthy ways to handle stress when it builds up.",
+     "I can tell the difference between a stressor I can change and one I can only respond to."],
+   starters:[
+     "I will use a body-based technique like slow breathing when I notice stress",
+     "I will sort my stressors into what I can change vs. what I can only respond to",
+     "I will replace one stress habit that only postpones stress with one that helps"]},
+  {id:"emotion", side:"mental", mod:"Module 2", name:"Emotional awareness",
+   stmts:[
+     "I can name what I'm feeling and pause before reacting.",
+     "I can settle myself down instead of letting a strong emotion take over."],
+   starters:[
+     "I will name my emotion with a specific word instead of 'fine' or 'mad'",
+     "I will use a delay strategy (count, step away) before reacting when I'm angry",
+     "I will practice one attention-based technique like mindful breathing"]},
+  {id:"selftalk", side:"mental", mod:"Module 1", name:"Self-talk & confidence",
+   stmts:[
+     "My inner voice is fair to me — I don't tear myself down.",
+     "When I catch negative self-talk, I can rewrite it into something accurate."],
+   starters:[
+     "I will catch a piece of negative self-talk and rewrite it accurately",
+     "I will practice a skill I care about to build my confidence",
+     "I will do one small act of service for someone"]},
+  {id:"cope", side:"mental", mod:"Module 2", name:"Coping & resilience",
+   stmts:[
+     "When something goes wrong, I bounce back with strategies that help.",
+     "I have people and habits that help me recover from a hard day."],
+   starters:[
+     "I will choose a coping strategy that helps, not one that only postpones",
+     "I will practice reframing a setback",
+     "I will reach out to one person in my support network"]},
+  {id:"help", side:"mental", mod:"Module 2", name:"Knowing where to get help",
+   stmts:[
+     "I know where I could go for help if I or a friend were struggling.",
+     "I'd know how to respond if a friend told me they were struggling."],
+   starters:[
+     "I will save two trusted help resources like 988 and SafeUT in my phone",
+     "I will learn what actually happens in a first counseling appointment",
+     "I will learn the four steps to help a struggling friend: ask, listen, don't promise secrecy, get an adult"]},
+  {id:"decide", side:"mental", mod:"Modules 1 & 3", name:"Healthy decisions & refusal",
+   stmts:[
+     "I make my own decisions and can say no to pressure.",
+     "I can walk through a decision step by step instead of just reacting."],
+   starters:[
+     "I will practice a refusal strategy out loud so I'm ready before I need it",
+     "I will use the five-step decision process for a real decision",
+     "I will make an exit plan for a situation where I might feel pressured"]},
+
+  /* ---- SOCIAL ---- */
+  {id:"comm", side:"social", mod:"Module 1", name:"Communication",
+   stmts:[
+     "I speak up for myself calmly and clearly.",
+     "I can tell assertive from passive or aggressive, and choose assertive."],
+   starters:[
+     "I will practice one assertive response instead of passive or aggressive",
+     "I will use an 'I' statement when something bothers me",
+     "I will really listen before responding in a hard conversation"]},
+  {id:"bound", side:"social", mod:"Modules 1 & 8", name:"Boundaries",
+   stmts:[
+     "I can set a boundary, and I respect other people's boundaries.",
+     "When someone tells me their boundary, I respond respectfully."],
+   starters:[
+     "I will state one personal boundary clearly using a repeatable structure",
+     "I will acknowledge and respect it when someone else states a boundary",
+     "I will plan what I'll say for a situation where holding a boundary is hard"]},
+  {id:"friend", side:"social", mod:"Module 8", name:"Healthy relationships",
+   stmts:[
+     "My friendships are respectful, honest, and supportive.",
+     "I can spot the early signs of an unhealthy or controlling relationship."],
+   starters:[
+     "I will practice one trait of a healthy friendship: respect, honesty, or support",
+     "I will check in on a friend and really listen",
+     "I will talk to a trusted adult about one unhealthy pattern I notice"]},
+  {id:"digbal", side:"social", mod:"Module 6", name:"Digital balance",
+   stmts:[
+     "I'm in charge of my screen time — it doesn't run me.",
+     "I choose active or creative online time over endless passive scrolling."],
+   starters:[
+     "I will set a no-phone zone or time (like device-free meals or study time)",
+     "I will swap one passive scrolling session for an active or creative use",
+     "I will charge my phone outside my room at night"]},
+  {id:"online", side:"social", mod:"Module 6", name:"Online safety",
+   stmts:[
+     "I protect my privacy online and know what to do if something feels wrong.",
+     "I think about my digital footprint before I share or post something."],
+   starters:[
+     "I will review and tighten the privacy settings on my apps",
+     "I will pause and think about my digital footprint before I post",
+     "I will learn the reporting steps for if something online feels wrong"]},
+  {id:"support", side:"social", mod:"Modules 2 & 6", name:"Support & belonging",
+   stmts:[
+     "I have people I can turn to and places where I feel I belong.",
+     "I keep up real, face-to-face connections, not just online ones."],
+   starters:[
+     "I will name three people in my support network and how each one can help",
+     "I will have one face-to-face (not screen) hangout",
+     "I will join or reconnect with one group or activity where I feel I belong"]}
+];
+
+const RATINGS = [
+  {v:1, label:"Not yet"},
+  {v:2, label:"Sometimes"},
+  {v:3, label:"Often"},
+  {v:4, label:"A strength"}
+];
+
+/* Modules taught in Health 1320 (for the per-module check-in). */
+const MODULES = [
+  {id:"M1", name:"Health & the Health Triangle"},
+  {id:"M2", name:"Mental & Emotional Health"},
+  {id:"M3", name:"Substance Abuse Prevention"},
+  {id:"M4", name:"Safety, First Aid & Disease Prevention"},
+  {id:"M5", name:"Nutrition, Body Image & Healthy Eating"},
+  {id:"M6", name:"Digital Wellness & Media Literacy"},
+  {id:"M7", name:"Human Development"},
+  {id:"M8", name:"Healthy Relationships & Personal Safety"}
+];
+
+/* ---------------- STATE (in memory only) ---------------- */
+const state = { answers:{}, goals:[], builderArea:null, editIndex:null, currentModule:null, sessionActions:0 };
+
+/* ---------------- NAV ---------------- */
+const SECTIONS = ["intro","quiz","results","builder","plan"];
+function goto(id){
+  SECTIONS.forEach(s=>document.getElementById(s).classList.toggle("hidden", s!==id));
+  window.scrollTo({top:0,behavior:"smooth"});
+}
+function startCheck(){ buildQuiz(); goto("quiz"); }
+
+/* ---------------- QUIZ ---------------- */
+function buildQuiz(){
+  const form = document.getElementById("quizForm");
+  if(form.dataset.built) { updateProgress(); return; }
+  let html = "";
+  ["physical","mental","social"].forEach(side=>{
+    html += `<div class="side-head"><span class="bar" style="background:${SIDES[side].color}"></span>
+      <h2>${SIDES[side].name}</h2></div>`;
+    AREAS.filter(a=>a.side===side).forEach(a=>{
+      html += `<fieldset class="q" data-area="${a.id}">
+        <div class="mod">${a.name} · ${a.mod}</div>`;
+      a.stmts.forEach((st,idx)=>{
+        html += (idx>0?`<hr class="qdiv">`:``) +
+        `<div class="stmt">${st}</div>
+        <div class="opts">` +
+        RATINGS.map(r=>`<label class="opt"><input type="radio" name="q_${a.id}_${idx}" value="${r.v}"
+          onchange="answer('${a.id}',${idx},${r.v})"><span>${r.label}</span></label>`).join("") +
+        `</div>
+        <div class="skiprow"><label class="opt skip"><input type="radio" name="q_${a.id}_${idx}" value="0"
+          onchange="answer('${a.id}',${idx},0)"> I'd rather skip this one</label></div>`;
+      });
+      html += `</fieldset>`;
+    });
+  });
+  form.innerHTML = html;
+  form.dataset.built = "1";
+  // restore any previously-saved answers into the radios
+  Object.entries(state.answers).forEach(([k,v])=>{
+    const [id,idx]=k.split("#");
+    const el=form.querySelector(`input[name="q_${id}_${idx}"][value="${v}"]`);
+    if(el) el.checked=true;
+  });
+  updateProgress();
+}
+function answer(id,idx,v){ state.answers[id+'#'+idx]=v; updateProgress(); saveState(); }
+function updateProgress(){
+  const done = Object.keys(state.answers).length;
+  const total = AREAS.length*2;
+  document.getElementById("progBar").style.width = (done/total*100)+"%";
+  document.getElementById("progText").textContent = `${done} of ${total} answered`;
+}
+
+/* ---------------- RESULTS ---------------- */
+function areaRating(a){
+  let sum=0,n=0;
+  [0,1].forEach(i=>{ const v=state.answers[a.id+'#'+i]; if(v&&v>0){sum+=v;n++;} });
+  return n? sum/n : null;
+}
+function sideScore(side){
+  const areas = AREAS.filter(a=>a.side===side);
+  let sum=0,n=0;
+  areas.forEach(a=>{ const r=areaRating(a); if(r!==null){sum+=r;n++;} });
+  return n? {pct:Math.round((sum/n -1)/3*100), n} : {pct:null,n:0};
+}
+function showResults(){
+  goto("results");
+  const scores={};
+  ["physical","mental","social"].forEach(s=>scores[s]=sideScore(s));
+  drawTriangle(scores);
+  drawMeters(scores);
+  drawStrengths();
+  drawGrow();
+}
+function drawMeters(scores){
+  const el=document.getElementById("meters");
+  el.innerHTML = ["physical","mental","social"].map(s=>{
+    const sc=scores[s]; const pct=sc.pct;
+    const shown = pct===null ? "—" : pct+"%";
+    const desc = pct===null ? "not answered" : pct>=67?"lots of strengths here":pct>=34?"some strengths, room to grow":"a good place to set a goal";
+    return `<div class="meter">
+      <div class="top"><b style="color:${SIDES[s].color}">${SIDES[s].name}</b><span class="val">${shown} · ${desc}</span></div>
+      <div class="track"><div class="fill" style="background:${SIDES[s].color};width:${pct===null?0:pct}%"></div></div>
+    </div>`;
+  }).join("");
+}
+function drawTriangle(scores){
+  const svg=document.getElementById("triSvg");
+  // Each EDGE LENGTH scales with that side's strength %. Longer side = stronger.
+  const Lp = p => 92 + (p==null?0:p)*0.52;          // edge length 92 (0%) → 144 (100%)
+  const cS = Lp(scores.social.pct);                  // edge A–B  (Social)
+  const bP = Lp(scores.physical.pct);                // edge A–C  (Physical)
+  const aM = Lp(scores.mental.pct);                  // edge B–C  (Mental)
+  // Build the triangle from its three side lengths (SSS) — always a valid triangle.
+  const A={x:0,y:0}, B={x:cS,y:0};
+  const cx=(bP*bP - aM*aM + cS*cS)/(2*cS);
+  const cy=Math.sqrt(Math.max(0.01, bP*bP - cx*cx));
+  const C={x:cx,y:cy};
+  const pts=[A,B,C];
+  // Fit + center into the viewBox (keeps the true relative side lengths).
+  const W=270,H=238,pad=46;
+  const xs=pts.map(p=>p.x), ys=pts.map(p=>p.y);
+  const minX=Math.min(...xs),maxX=Math.max(...xs),minY=Math.min(...ys),maxY=Math.max(...ys);
+  const s=Math.min((W-2*pad)/((maxX-minX)||1),(H-2*pad)/((maxY-minY)||1));
+  const gx=(minX+maxX)/2, gy=(minY+maxY)/2;
+  const T=p=>({x:W/2+(p.x-gx)*s, y:H/2-(p.y-gy)*s});   // flip y so it points up
+  const tA=T(A),tB=T(B),tC=T(C);
+  const cen={x:(tA.x+tB.x+tC.x)/3, y:(tA.y+tB.y+tC.y)/3};
+  function edge(p,q,side){
+    const pct=scores[side].pct;
+    return `<line x1="${p.x}" y1="${p.y}" x2="${q.x}" y2="${q.y}" stroke="${SIDES[side].color}"
+      stroke-width="6" stroke-linecap="round" opacity="${pct==null?.4:1}"/>`;
+  }
+  function lbl(p,q,side,name){
+    const pct=scores[side].pct;
+    let mx=(p.x+q.x)/2, my=(p.y+q.y)/2;
+    let dx=mx-cen.x, dy=my-cen.y; const d=Math.hypot(dx,dy)||1;
+    const lx=mx+dx/d*20, ly=my+dy/d*20;
+    return `<text x="${lx}" y="${ly}" text-anchor="middle" fill="${SIDES[side].color}" font-weight="700">
+      <tspan x="${lx}" dy="-3" font-size="10">${name}</tspan>
+      <tspan x="${lx}" dy="13" font-size="12">${pct==null?"—":pct+"%"}</tspan></text>`;
+  }
+  svg.setAttribute("viewBox",`0 0 ${W} ${H}`);
+  svg.setAttribute("aria-label","Health triangle where each side's length reflects your strength percentage on that side");
+  svg.innerHTML =
+    edge(tA,tB,"social") + edge(tA,tC,"physical") + edge(tB,tC,"mental") +
+    lbl(tA,tB,"social","Social") + lbl(tA,tC,"physical","Physical") + lbl(tB,tC,"mental","Mental") +
+    `<circle cx="${tA.x}" cy="${tA.y}" r="3.5" fill="var(--muted)"/>
+     <circle cx="${tB.x}" cy="${tB.y}" r="3.5" fill="var(--muted)"/>
+     <circle cx="${tC.x}" cy="${tC.y}" r="3.5" fill="var(--muted)"/>`;
+}
+function drawStrengths(){
+  const el=document.getElementById("strengths");
+  const strong = AREAS.filter(a=>{const r=areaRating(a); return r!==null && r>=3;});
+  if(!strong.length){ el.innerHTML='<span class="help">Answer the check-in to see your strengths. Every triangle has some!</span>'; return; }
+  el.innerHTML = strong.map(a=>`<span class="chip strong"><span class="dot" style="width:9px;height:9px;background:${SIDES[a.side].color}"></span>${a.name}</span>`).join("");
+}
+function drawGrow(){
+  const el=document.getElementById("growAreas");
+  const grow = AREAS.filter(a=>{const r=areaRating(a); return r!==null && r<=2;});
+  if(!grow.length){ el.innerHTML='<p class="help">No clear growth areas flagged — nice! You can still build a goal for any area below to keep a strength strong.</p>'; return; }
+  // sort by weakest first
+  grow.sort((a,b)=>areaRating(a)-areaRating(b));
+  el.innerHTML = grow.map(a=>`<div class="grow-item">
+    <div><span class="lbl">${a.name}</span><span class="side-tag">${SIDES[a.side].name} · ${a.mod}</span></div>
+    <button class="btn small" type="button" onclick="openBuilder('${a.id}')">Set a goal →</button>
+  </div>`).join("");
+}
+
+/* ---------------- BUILDER ---------------- */
+function openBuilder(areaId, editIndex){
+  state.editIndex = (editIndex==null ? null : editIndex);
+  const editing = state.editIndex!=null;
+  const ctx=document.getElementById("bContext");
+  const starters=document.getElementById("starters");
+  ["fSpecific","fMeasure","fAchieve","fRelevant","fTime","fObstacle","fNote"].forEach(id=>document.getElementById(id).value="");
+  state._specNudged=false; document.getElementById("specTip").classList.add("hidden");
+  document.getElementById("bH").textContent = editing ? "Adjust your SMART goal" : "Build a SMART goal";
+  document.getElementById("saveBtn").textContent = editing ? "Save changes" : "Save this goal";
+
+  if(editing){
+    const g=state.goals[state.editIndex];
+    areaId = g.area;
+    document.getElementById("fSpecific").value=g.specific||"";
+    document.getElementById("fMeasure").value=g.measure||"";
+    document.getElementById("fAchieve").value=g.achieve||"";
+    document.getElementById("fRelevant").value=g.relevant||"";
+    document.getElementById("fTime").value=g.time||"";
+    document.getElementById("fObstacle").value=g.obstacle||"";
+    // fNote stays empty — it adds a NEW dated progress entry each time
+  }
+  state.builderArea = areaId;
+  let list;
+  if(areaId){
+    const a=AREAS.find(x=>x.id===areaId);
+    const modTxt = state.currentModule ? ` · check-in for ${state.currentModule}` : "";
+    ctx.innerHTML=`${editing?"Adjusting your":"New"} goal for <b>${a.name}</b> — ${SIDES[a.side].name} side (${a.mod})${modTxt}.`;
+    list=a.starters.map(s=>({s,side:a.side}));
+  } else {
+    ctx.innerHTML="Choose any starter below, or write your own goal from scratch.";
+    list=AREAS.flatMap(a=>a.starters.slice(0,1).map(s=>({s,side:a.side})));
+  }
+  starters.innerHTML=list.map((o,i)=>`<button class="starter" type="button" onclick="useStarter(${i})">${o.s}</button>`).join("");
+  state._starterList=list;
+  goto("builder");
+}
+function editGoal(i){ openBuilder(null, i); }
+function useStarter(i){
+  const o=state._starterList[i];
+  document.getElementById("fSpecific").value = o.s;
+  document.getElementById("fSpecific").focus();
+}
+function cancelBuilder(){ state.editIndex=null; goto(state.goals.length?"plan":"results"); if(state.goals.length) renderPlan(); }
+function saveGoal(){
+  const specific=val("fSpecific");
+  if(!specific.trim()){ alert("Add at least the Specific part — what exactly you'll do."); return; }
+  const measure=val("fMeasure"), time=val("fTime");
+  // Gentle, non-blocking nudge toward specificity on "when" and "how often"
+  const tip=document.getElementById("specTip");
+  const missing=[];
+  if(!measure.trim()) missing.push("how often (e.g., 4 times a week)");
+  if(!time.trim()) missing.push("when you'll do it and by when");
+  if(missing.length && !state._specNudged){
+    tip.textContent = "💡 Make it trackable: add " + missing.join(" and ") + ". Tap Save again to keep it as-is.";
+    tip.classList.remove("hidden");
+    state._specNudged = true;
+    tip.scrollIntoView({behavior:"smooth",block:"center"});
+    return;
+  }
+  tip.classList.add("hidden"); state._specNudged=false;
+  const t=todayYMD();
+  const noteText=val("fNote").trim();
+  let g;
+  if(state.editIndex!=null){
+    g=state.goals[state.editIndex];
+    g.specific=specific; g.measure=measure; g.achieve=val("fAchieve");
+    g.relevant=val("fRelevant"); g.time=time; g.obstacle=val("fObstacle");
+    g.updated=t; g.module=state.currentModule||g.module||null;
+  } else {
+    g={
+      area: state.builderArea,
+      side: state.builderArea? AREAS.find(a=>a.id===state.builderArea).side : "physical",
+      areaName: state.builderArea? AREAS.find(a=>a.id===state.builderArea).name : "My goal",
+      specific, measure, achieve:val("fAchieve"),
+      relevant:val("fRelevant"), time, obstacle:val("fObstacle"),
+      module: state.currentModule||null, created:t, updated:t, log:[]
+    };
+    state.goals.push(g);
+  }
+  if(noteText){ g.log=g.log||[]; g.log.push({ date:t, module:g.module||null, text:noteText }); }
+  state.editIndex=null;
+  saveState();
+  renderPlan(); goto("plan");
+}
+function val(id){return document.getElementById(id).value;}
+function todayYMD(){ const d=new Date(); return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0"); }
+function prettyDate(ymd){ if(!ymd) return ""; const [y,m,dd]=ymd.split("-").map(Number); const d=new Date(y,m-1,dd); return d.toLocaleDateString(undefined,{month:"short",day:"numeric"}); }
+
+/* ---------------- PLAN ---------------- */
+function statementFor(g){
+  let s = g.specific.trim().replace(/[.]$/,"");
+  const parts=[s];
+  if(g.measure.trim()) parts.push(g.measure.trim());
+  if(g.time.trim()) parts.push(g.time.trim());
+  return parts.join(" ").replace(/\s+/g," ") + ".";
+}
+function renderPlan(){
+  const list=document.getElementById("goalList");
+  const empty=document.getElementById("planEmpty");
+  empty.classList.toggle("hidden", state.goals.length>0);
+  list.innerHTML = state.goals.map((g,i)=>{
+    const color = SIDES[g.side]?SIDES[g.side].color:"var(--accent)";
+    const modTag = g.module? ` · <span style="font-weight:400;color:var(--muted)">${g.module}</span>` : "";
+    const meta = g.created ? `<div class="meta-line">Started ${prettyDate(g.created)}${g.updated&&g.updated!==g.created?` · last updated ${prettyDate(g.updated)}`:""}</div>` : "";
+    const log = (g.log&&g.log.length) ? `
+      <div class="log">
+        <div class="log-h">Progress log — how it's going</div>
+        ${g.log.map(e=>`<div class="log-item"><span class="d">${prettyDate(e.date)}${e.module?` <span class="m">· ${e.module}</span>`:""}:</span> ${escapeHtml(e.text)}</div>`).join("")}
+      </div>` : "";
+    return `<div class="goalcard" style="border-left-color:${color}">
+      <div class="sideflag" style="color:${color}">${SIDES[g.side]?SIDES[g.side].name:""} · ${g.areaName}${modTag}</div>
+      ${meta}
+      <div class="statement">${escapeHtml(statementFor(g))}</div>
+      <dl>
+        ${g.achieve&&g.achieve.trim()?`<dt>First step</dt><dd>${escapeHtml(g.achieve)}</dd>`:""}
+        ${g.relevant&&g.relevant.trim()?`<dt>Why it matters</dt><dd>${escapeHtml(g.relevant)}</dd>`:""}
+        ${g.obstacle&&g.obstacle.trim()?`<dt>If it gets hard</dt><dd>${escapeHtml(g.obstacle)}</dd>`:""}
+      </dl>
+      ${log}
+      <div class="btnrow no-print">
+        <button class="btn secondary small" type="button" onclick="editGoal(${i})">Adjust / add progress</button>
+        <button class="btn secondary small" type="button" onclick="removeGoal(${i})">Remove</button>
+      </div>
+    </div>`;
+  }).join("");
+  // keep checkpoint name/class inputs in sync with saved state
+  const nm=document.getElementById("ckName"), cl=document.getElementById("ckClass");
+  if(nm && state.ckName!=null) nm.value=state.ckName;
+  if(cl && state.ckClass!=null) cl.value=state.ckClass;
+}
+function removeGoal(i){ if(!confirm("Remove this goal and its progress log?")) return; state.goals.splice(i,1); saveState(); renderPlan(); }
+function escapeHtml(t){return t.replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
+
+/* ---------------- SAVE FILE (local only, no server) ---------------- */
+function downloadPlan(){
+  if(!state.goals.length){ alert("Build a goal first!"); return; }
+  const lines=["MY HEALTH TRIANGLE — SMART GOAL PLAN","(A private companion to Health 1320)","",];
+  state.goals.forEach((g,i)=>{
+    lines.push(`GOAL ${i+1} — ${SIDES[g.side]?SIDES[g.side].name:""} side · ${g.areaName}${g.module?" · "+g.module:""}`);
+    if(g.created) lines.push(`  Started ${prettyDate(g.created)}${g.updated&&g.updated!==g.created?", last updated "+prettyDate(g.updated):""}`);
+    lines.push(`  ${statementFor(g)}`);
+    if(g.specific&&g.specific.trim()) lines.push(`  S (Specific):   ${g.specific}`);
+    if(g.measure&&g.measure.trim())  lines.push(`  M (Measurable): ${g.measure}`);
+    if(g.achieve&&g.achieve.trim())  lines.push(`  A (Achievable): first step — ${g.achieve}`);
+    if(g.relevant&&g.relevant.trim()) lines.push(`  R (Relevant):   ${g.relevant}`);
+    if(g.time&&g.time.trim())     lines.push(`  T (Time-bound): ${g.time}`);
+    if(g.obstacle&&g.obstacle.trim()) lines.push(`  If it gets hard: ${g.obstacle}`);
+    if(g.log&&g.log.length){
+      lines.push(`  Progress log:`);
+      g.log.forEach(e=>lines.push(`    - ${prettyDate(e.date)}${e.module?" ("+e.module+")":""}: ${e.text}`));
+    }
+    lines.push("");
+  });
+  lines.push("Adjust these as we move through each module, and revise how they're going (Lesson 1.10).");
+  lines.push("Need to talk? 988 (call/text) · SafeUT app · Nat'l Alliance for Eating Disorders 1-866-662-1235");
+  const blob=new Blob([lines.join("\n")],{type:"text/plain"});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement("a");
+  a.href=url; a.download="My_Health_Triangle_Goals.txt";
+  document.body.appendChild(a); a.click();
+  setTimeout(()=>{URL.revokeObjectURL(url);a.remove();},100);
+}
+
+/* ---------------- MODULE CHECK-IN ---------------- */
+function moduleNums(a){ return (a.mod.match(/\d+/g)||[]).map(Number); }
+function relevantAreas(modId){ const n=Number(modId.replace("M","")); return AREAS.filter(a=>moduleNums(a).includes(n)); }
+function onModuleChange(){
+  const sel=document.getElementById("modSelect");
+  state.currentModule = sel.value || null;
+  const box=document.getElementById("modAreas");
+  if(!state.currentModule){ box.innerHTML=""; return; }
+  const modObj=MODULES.find(m=>m.id===state.currentModule);
+  const areas=relevantAreas(state.currentModule);
+  if(!areas.length){
+    box.innerHTML=`<p class="help">We cover <b>${modObj.name}</b> together in class. Keep your current goals going, or use “Build a goal for any area” on the results screen to set a new one.</p>`;
+    return;
+  }
+  box.innerHTML=`<p class="help">Goals that connect to <b>${modObj.id} — ${modObj.name}</b>. Adjust one you already have, or start a new one:</p>`+
+    areas.map(a=>{
+      const existing=state.goals.findIndex(g=>g.area===a.id);
+      const label = existing>=0 ? "Adjust →" : "Work on this →";
+      const fn = existing>=0 ? `editGoal(${existing})` : `openBuilder('${a.id}')`;
+      return `<div class="grow-item"><div><span class="lbl">${a.name}</span>
+        <span class="side-tag">${SIDES[a.side].name} · ${a.mod}</span></div>
+        <button class="btn small" type="button" onclick="${fn}">${label}</button></div>`;
+    }).join("");
+}
+
+/* ---------------- COMPLETION CHECKPOINT (no health content, turn-in proof) ---------------- */
+function makeCheckpoint(){
+  const name=val("ckName").trim(), cls=val("ckClass").trim();
+  if(!name){ alert("Add your name so your teacher knows whose slip this is."); return; }
+  if(!document.getElementById("ck1").checked){ alert("Check the first box to confirm you completed your check-in."); return; }
+  const d=new Date();
+  const ymd=d.getFullYear()+String(d.getMonth()+1).padStart(2,"0")+String(d.getDate()).padStart(2,"0");
+  const dateStr=d.toLocaleDateString(undefined,{year:"numeric",month:"long",day:"numeric"});
+  const mod=state.currentModule;
+  const modObj=MODULES.find(m=>m.id===mod);
+  const modLabel=modObj?`${modObj.id} — ${modObj.name}`:"General check-in";
+  const adj=document.getElementById("ck2").checked;
+  const t=todayYMD();
+  const goals=state.goals.length;
+  const acts=state.goals.filter(g=>g.updated===t||g.created===t).length;
+  const code=`HT1320-${mod||"GEN"}-${ymd}-${goals}G${acts}U`;
+  state.ckName=name; state.ckClass=cls; saveState();
+  state._lastSlip={name,cls,dateStr,modLabel,goals,acts,adj,code};
+  document.getElementById("slipCard").innerHTML = `
+    <div class="slip" id="slipInner">
+      <div class="slip-h">Health 1320 · Health Triangle Goal Check-In</div>
+      <div class="slip-title">Completion Checkpoint</div>
+      <table class="slip-t">
+        <tr><td>Name</td><td>${escapeHtml(name)}</td></tr>
+        <tr><td>Class / period</td><td>${escapeHtml(cls||"—")}</td></tr>
+        <tr><td>Date</td><td>${dateStr}</td></tr>
+        <tr><td>Module</td><td>${escapeHtml(modLabel)}</td></tr>
+      </table>
+      <div class="slip-checks">
+        <div>☑ Completed the Health Triangle check-in</div>
+        <div>${adj?"☑":"☐"} Reviewed goals and adjusted or added a goal for this module</div>
+      </div>
+      <div class="slip-counts">Goals in plan: <b>${goals}</b> &nbsp;·&nbsp; Created or updated today: <b>${acts}</b></div>
+      <div class="slip-code">Completion code: ${code}</div>
+      <div class="slip-note">This slip confirms the activity was completed. It does not contain the student's answers or goals — those stay private on the student's device.</div>
+      <div class="slip-sign">Teacher signature / stamp: __________________________</div>
+    </div>
+    <div class="btnrow no-print">
+      <button class="btn" type="button" onclick="printSlip()">🖨️ Print slip</button>
+      <button class="btn secondary" type="button" onclick="downloadSlip()">💾 Save slip as file</button>
+    </div>`;
+  document.getElementById("slipCard").scrollIntoView({behavior:"smooth",block:"center"});
+}
+function printSlip(){
+  document.body.classList.add("slip-only");
+  window.print();
+  setTimeout(()=>document.body.classList.remove("slip-only"),400);
+}
+function downloadSlip(){
+  const s=state._lastSlip; if(!s){ makeCheckpoint(); return; }
+  const L=[
+    "HEALTH 1320 — HEALTH TRIANGLE GOAL CHECK-IN","COMPLETION CHECKPOINT","",
+    "Name: "+s.name,
+    "Class / period: "+(s.cls||"—"),
+    "Date: "+s.dateStr,
+    "Module: "+s.modLabel,"",
+    "[x] Completed the Health Triangle check-in",
+    (s.adj?"[x]":"[ ]")+" Reviewed goals and adjusted/added a goal for this module","",
+    "Goals in plan: "+s.goals+"    Created or updated today: "+s.acts,
+    "Completion code: "+s.code,"",
+    "This slip confirms the activity was completed. It does not contain the",
+    "student's answers or goals — those stay private on the student's device.","",
+    "Teacher signature / stamp: __________________________"
+  ];
+  const blob=new Blob([L.join("\n")],{type:"text/plain"});
+  const url=URL.createObjectURL(blob); const a=document.createElement("a");
+  a.href=url; a.download="Health1320_Completion_Checkpoint.txt";
+  document.body.appendChild(a); a.click();
+  setTimeout(()=>{URL.revokeObjectURL(url);a.remove();},100);
+}
+/* ---------------- ON-DEVICE PERSISTENCE (localStorage; never transmitted) ---------------- */
+const LS_KEY="healthTriangle1320_v1";
+function saveState(){
+  try{
+    localStorage.setItem(LS_KEY, JSON.stringify({
+      answers: state.answers, goals: state.goals,
+      ckName: state.ckName||"", ckClass: state.ckClass||"", v:1
+    }));
+  }catch(e){ /* private mode / storage full — app still works this session */ }
+}
+function loadState(){
+  try{
+    const raw=localStorage.getItem(LS_KEY); if(!raw) return false;
+    const d=JSON.parse(raw);
+    if(d.answers && typeof d.answers==="object") state.answers=d.answers;
+    if(Array.isArray(d.goals)) state.goals=d.goals;
+    state.ckName=d.ckName||""; state.ckClass=d.ckClass||"";
+    return (state.goals.length>0) || (Object.keys(state.answers).length>0);
+  }catch(e){ return false; }
+}
+function backupProgress(){
+  const data=JSON.stringify({answers:state.answers,goals:state.goals,ckName:state.ckName||"",ckClass:state.ckClass||"",v:1});
+  const blob=new Blob([data],{type:"application/json"});
+  const url=URL.createObjectURL(blob); const a=document.createElement("a");
+  a.href=url; a.download="Health_Triangle_Backup.json";
+  document.body.appendChild(a); a.click(); setTimeout(()=>{URL.revokeObjectURL(url);a.remove();},100);
+}
+function restoreProgress(ev){
+  const f=ev.target.files && ev.target.files[0]; if(!f){ return; }
+  const r=new FileReader();
+  r.onload=()=>{
+    try{
+      const d=JSON.parse(r.result);
+      if(d.answers && typeof d.answers==="object") state.answers=d.answers;
+      if(Array.isArray(d.goals)) state.goals=d.goals;
+      state.ckName=d.ckName||state.ckName||""; state.ckClass=d.ckClass||state.ckClass||"";
+      saveState();
+      const form=document.getElementById("quizForm"); if(form) form.dataset.built="";
+      renderPlan(); goto("plan");
+      alert("Progress restored from your backup.");
+    }catch(e){ alert("Sorry — that file couldn't be read as a backup."); }
+  };
+  r.readAsText(f); ev.target.value="";
+}
+function clearAll(){
+  if(confirm("This erases the answers and goals saved on this laptop. This can't be undone. Are you sure?")){
+    try{ localStorage.removeItem(LS_KEY); }catch(e){}
+    location.reload();
+  }
+}
+function resumeToPlan(){ renderPlan(); goto("plan"); }
+function resumeToResults(){
+  if(Object.keys(state.answers).length){ showResults(); }
+  else { renderPlan(); goto("plan"); }
+}
+
+/* populate the module dropdown */
+(function initModules(){
+  const sel=document.getElementById("modSelect");
+  MODULES.forEach(m=>{ const o=document.createElement("option"); o.value=m.id; o.textContent=`${m.id} — ${m.name}`; sel.appendChild(o); });
+})();
+
+/* ---------------- THEME ---------------- */
+document.getElementById("themeBtn").addEventListener("click",()=>{
+  const html=document.documentElement;
+  const now=html.getAttribute("data-theme");
+  html.setAttribute("data-theme", now==="dark"?"light":"dark");
+});
+
+/* ---------------- BOOT: restore saved progress on this device ---------------- */
+(function boot(){
+  const has=loadState();
+  if(has){
+    const rb=document.getElementById("resumeBox");
+    if(rb) rb.classList.remove("hidden");
+    renderPlan();
+  }
+})();
+</script>
+</body>
+</html>
